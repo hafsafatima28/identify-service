@@ -1,0 +1,37 @@
+// Prisma schema for the identity reconciliation service.
+// Run `npm run prisma:migrate` after setting DATABASE_URL in .env
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LinkPrecedence {
+  primary
+  secondary
+}
+
+model Contact {
+  id             Int            @id @default(autoincrement())
+  phoneNumber    String?
+  email          String?
+  // Self-relation: a secondary contact points to its primary via linkedId.
+  linkedId       Int?
+  linkedContact  Contact?       @relation("ContactLinks", fields: [linkedId], references: [id])
+  secondaries    Contact[]      @relation("ContactLinks")
+  linkPrecedence LinkPrecedence @default(primary)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  // Indexes for the "covert optimization" bonus — these are the two columns
+  // every /identify request filters on, so lookups stay fast as the table grows.
+  @@index([email])
+  @@index([phoneNumber])
+  @@index([linkedId])
+}
