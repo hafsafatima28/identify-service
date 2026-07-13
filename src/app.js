@@ -1,5 +1,6 @@
 const express = require('express');
 const identifyRoutes = require('./routes/identify');
+const productsRoutes = require('./routes/products');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -12,6 +13,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/', identifyRoutes);
+app.use('/', productsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
